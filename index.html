@@ -232,6 +232,28 @@
             display: block;
         }
 
+        .deco-loading {
+            position: absolute;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .deco-loading .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(124, 179, 66, 0.2);
+            border-top-color: #7CB342;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         @keyframes decoAppear {
             0% { opacity: 0; transform: scale(0.7); }
             60% { transform: scale(1.05); }
@@ -742,7 +764,7 @@
 </div>
 
 <div id="room-container">
-    <img src="room.webp?v=6" alt="房间" id="room-img">
+    <img src="room.webp?v=7" alt="房间" id="room-img">
 </div>
 
 <div id="counter-panel">
@@ -901,6 +923,7 @@
     var durgFound = false;
     var isSecondPlay = false;
     var firstGift = null;
+    var videoCache = {};
 
     function init() {
         var container = document.getElementById('room-container');
@@ -908,22 +931,59 @@
         var loadingScreen = document.getElementById('loading-screen');
         var roomImg = document.getElementById('room-img');
 
-        if (roomImg.complete && roomImg.naturalWidth > 0) {
+        function hideLoading() {
             loadingBar.style.width = '100%';
             setTimeout(function() { loadingScreen.classList.add('hidden'); }, 300);
+        }
+
+        function preloadAssets() {
+            var allImageFiles = [];
+            var allVideoFiles = [];
+            hotspots.forEach(function(hs) {
+                hs.options.forEach(function(opt) {
+                    if (opt.file.endsWith('.mp4') || opt.file.endsWith('.mov')) {
+                        allVideoFiles.push(opt.file);
+                    } else {
+                        allImageFiles.push(opt.file);
+                    }
+                });
+            });
+
+            var totalFiles = allImageFiles.length + allVideoFiles.length;
+            if (totalFiles === 0) { hideLoading(); return; }
+
+            var loaded = 0;
+            function onLoaded() {
+                loaded++;
+                var pct = 30 + Math.round((loaded / totalFiles) * 70);
+                loadingBar.style.width = pct + '%';
+                if (loaded >= totalFiles) hideLoading();
+            }
+
+            allImageFiles.forEach(function(file) {
+                var img = new Image();
+                img.onload = onLoaded;
+                img.onerror = onLoaded;
+                img.src = file;
+            });
+
+            allVideoFiles.forEach(function(file) {
+                var video = document.createElement('video');
+                video.preload = 'auto';
+                video.muted = true;
+                video.src = file + '?v=11';
+                video.addEventListener('canplaythrough', onLoaded, { once: true });
+                video.addEventListener('error', onLoaded, { once: true });
+                videoCache[file] = video;
+            });
+        }
+
+        if (roomImg.complete && roomImg.naturalWidth > 0) {
+            preloadAssets();
         } else {
-            loadingBar.style.width = '30%';
-            roomImg.addEventListener('load', function() {
-                loadingBar.style.width = '100%';
-                setTimeout(function() { loadingScreen.classList.add('hidden'); }, 300);
-            });
-            roomImg.addEventListener('error', function() {
-                loadingBar.style.width = '100%';
-                setTimeout(function() { loadingScreen.classList.add('hidden'); }, 300);
-            });
-            setTimeout(function() {
-                loadingBar.style.width = '60%';
-            }, 500);
+            loadingBar.style.width = '10%';
+            roomImg.addEventListener('load', preloadAssets);
+            roomImg.addEventListener('error', hideLoading);
         }
 
         hotspots.forEach(function(hs) {
@@ -1012,6 +1072,14 @@
         var isVideo = option.file.endsWith('.mp4') || option.file.endsWith('.mov');
 
         if (isVideo) {
+            var wrapper = document.createElement('div');
+            wrapper.style.cssText = 'position:relative;width:100%;max-height:280px;display:flex;align-items:center;justify-content:center;background:#1a1a1a;border-radius:12px;overflow:hidden;min-height:160px;';
+
+            var spinner = document.createElement('div');
+            spinner.className = 'spinner';
+            spinner.style.cssText = 'width:28px;height:28px;border:3px solid rgba(255,255,255,0.2);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;position:absolute;';
+            wrapper.appendChild(spinner);
+
             var video = document.createElement('video');
             video.src = option.file + '?v=11';
             video.setAttribute('autoplay', '');
@@ -1019,11 +1087,15 @@
             video.setAttribute('webkit-playsinline', '');
             video.className = 'result-video';
             video.muted = false;
-            container.appendChild(video);
+            video.preload = 'auto';
 
             video.addEventListener('canplay', function() {
+                spinner.style.display = 'none';
                 video.play().catch(function() {});
-            });
+            }, { once: true });
+
+            wrapper.appendChild(video);
+            container.appendChild(wrapper);
 
             var playAttempt = function() {
                 video.play().catch(function() {});
@@ -1124,13 +1196,37 @@
         var needsChromaKey = option.file.endsWith('.mov') || (override.chromaKey === true);
 
         if (isVideo) {
-            var video = document.createElement('video');
-            video.src = option.file + '?v=11';
+            var loadingEl = document.createElement('div');
+            loadingEl.className = 'deco-loading';
+            loadingEl.style.left = (dx / BASE_W * 100) + '%';
+            loadingEl.style.top = (dy / BASE_H * 100) + '%';
+            loadingEl.style.width = (dw / BASE_W * 100) + '%';
+            loadingEl.style.height = (dh / BASE_H * 100) + '%';
+            loadingEl.innerHTML = '<div class="spinner"></div>';
+            document.getElementById('room-container').appendChild(loadingEl);
+
+            var video;
+            if (videoCache[option.file]) {
+                video = videoCache[option.file].cloneNode(false);
+                video.removeAttribute('src');
+                video.src = option.file + '?v=11';
+            } else {
+                video = document.createElement('video');
+                video.src = option.file + '?v=11';
+            }
             video.setAttribute('autoplay', '');
             video.setAttribute('loop', '');
             video.setAttribute('playsinline', '');
             video.setAttribute('muted', '');
             video.muted = true;
+            video.preload = 'auto';
+
+            function onVideoReady() {
+                if (loadingEl.parentNode) loadingEl.remove();
+            }
+
+            video.addEventListener('canplay', onVideoReady, { once: true });
+            setTimeout(function() { onVideoReady(); }, 3000);
 
             if (needsChromaKey) {
                 video.style.display = 'none';
@@ -1142,12 +1238,18 @@
                 canvas.style.objectFit = 'fill';
                 deco.appendChild(canvas);
 
-                var ctx = canvas.getContext('2d');
+                var ctx = canvas.getContext('2d', { willReadFrequently: true });
                 var isWhiteBg = override.chromaKeyColor === 'white';
                 var threshold = isWhiteBg ? 240 : 30;
+                var frameCount = 0;
 
                 function processFrame() {
                     if (video.paused || video.ended) {
+                        requestAnimationFrame(processFrame);
+                        return;
+                    }
+                    frameCount++;
+                    if (frameCount % 2 !== 0) {
                         requestAnimationFrame(processFrame);
                         return;
                     }
@@ -1216,14 +1318,14 @@
 
         if (hotspot.id === 1 && hotspot.options.indexOf(option) === 0) {
             if (bgMusic) { bgMusic.pause(); bgMusic = null; }
-            bgMusic = new Audio('mu00.mp3?v=1');
+            bgMusic = new Audio('mu00.m4a?v=2');
             bgMusic.loop = false;
             bgMusic.play().catch(function() {});
         }
 
         if (hotspot.id === 7 && hotspot.options.indexOf(option) === 0) {
             if (bgMusic) { bgMusic.pause(); bgMusic = null; }
-            bgMusic = new Audio('mu01.mp3?v=1');
+            bgMusic = new Audio('mu01.m4a?v=2');
             bgMusic.loop = true;
             bgMusic.play().catch(function() {});
         }
