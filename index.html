@@ -764,7 +764,7 @@
 </div>
 
 <div id="room-container">
-    <img src="room.webp?v=7" alt="房间" id="room-img">
+    <img src="room.webp?v=12" alt="房间" id="room-img">
 </div>
 
 <div id="counter-panel">
@@ -971,7 +971,7 @@
                 var video = document.createElement('video');
                 video.preload = 'auto';
                 video.muted = true;
-                video.src = file + '?v=11';
+                video.src = file + '?v=17';
                 video.addEventListener('canplaythrough', onLoaded, { once: true });
                 video.addEventListener('error', onLoaded, { once: true });
                 videoCache[file] = video;
@@ -1081,7 +1081,7 @@
             wrapper.appendChild(spinner);
 
             var video = document.createElement('video');
-            video.src = option.file + '?v=11';
+            video.src = option.file + '?v=17';
             video.setAttribute('autoplay', '');
             video.setAttribute('playsinline', '');
             video.setAttribute('webkit-playsinline', '');
@@ -1147,7 +1147,7 @@
         },
         10: {
             0: { x: 2300, y: 2800, w: 1400, h: 2178, z: 10 },
-            1: { x: 2080, y: 4300, w: 1150, h: 1050, rotate: -30 }
+            1: { x: 2080, y: 4200, w: 1150, h: 1050, rotate: -30 }
         },
         11: {
             0: { x: 1600, y: 4000, w: 850, h: 567 },
@@ -1205,21 +1205,13 @@
             loadingEl.innerHTML = '<div class="spinner"></div>';
             document.getElementById('room-container').appendChild(loadingEl);
 
-            var video;
-            if (videoCache[option.file]) {
-                video = videoCache[option.file].cloneNode(false);
-                video.removeAttribute('src');
-                video.src = option.file + '?v=11';
-            } else {
-                video = document.createElement('video');
-                video.src = option.file + '?v=11';
-            }
+            var video = document.createElement('video');
+            video.src = option.file + '?v=17';
             video.setAttribute('autoplay', '');
             video.setAttribute('loop', '');
             video.setAttribute('playsinline', '');
             video.setAttribute('muted', '');
             video.muted = true;
-            video.preload = 'auto';
 
             function onVideoReady() {
                 if (loadingEl.parentNode) loadingEl.remove();
@@ -1229,7 +1221,13 @@
             setTimeout(function() { onVideoReady(); }, 3000);
 
             if (needsChromaKey) {
-                video.style.display = 'none';
+                video.style.position = 'absolute';
+                video.style.setProperty('width', '1px', 'important');
+                video.style.setProperty('height', '1px', 'important');
+                video.style.overflow = 'hidden';
+                video.style.opacity = '0';
+                video.style.pointerEvents = 'none';
+                video.style.zIndex = '-1';
                 deco.appendChild(video);
 
                 var canvas = document.createElement('canvas');
@@ -1238,18 +1236,12 @@
                 canvas.style.objectFit = 'fill';
                 deco.appendChild(canvas);
 
-                var ctx = canvas.getContext('2d', { willReadFrequently: true });
+                var ctx = canvas.getContext('2d');
                 var isWhiteBg = override.chromaKeyColor === 'white';
                 var threshold = isWhiteBg ? 240 : 30;
-                var frameCount = 0;
 
                 function processFrame() {
                     if (video.paused || video.ended) {
-                        requestAnimationFrame(processFrame);
-                        return;
-                    }
-                    frameCount++;
-                    if (frameCount % 2 !== 0) {
                         requestAnimationFrame(processFrame);
                         return;
                     }
@@ -1318,14 +1310,14 @@
 
         if (hotspot.id === 1 && hotspot.options.indexOf(option) === 0) {
             if (bgMusic) { bgMusic.pause(); bgMusic = null; }
-            bgMusic = new Audio('mu00.m4a?v=2');
+            bgMusic = new Audio('mu00.m4a?v=3');
             bgMusic.loop = false;
             bgMusic.play().catch(function() {});
         }
 
         if (hotspot.id === 7 && hotspot.options.indexOf(option) === 0) {
             if (bgMusic) { bgMusic.pause(); bgMusic = null; }
-            bgMusic = new Audio('mu01.m4a?v=2');
+            bgMusic = new Audio('mu01.m4a?v=3');
             bgMusic.loop = true;
             bgMusic.play().catch(function() {});
         }
