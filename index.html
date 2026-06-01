@@ -36,6 +36,30 @@
             margin-bottom: 20px;
         }
 
+        #loading-screen .loading-story {
+            max-width: 320px;
+            text-align: center;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            color: #5D4037;
+            margin-bottom: 24px;
+            min-height: 80px;
+        }
+
+        #loading-screen .loading-story .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background: #7CB342;
+            margin-left: 2px;
+            animation: blink 0.8s step-end infinite;
+            vertical-align: text-bottom;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
         #loading-screen .loading-bar-bg {
             width: 200px;
             height: 6px;
@@ -751,6 +775,7 @@
 <div id="loading-screen">
     <div class="loading-emoji">🎂</div>
     <div class="loading-text">正在布置房间...</div>
+    <div class="loading-story" id="loading-story"></div>
     <div class="loading-bar-bg"><div class="loading-bar" id="loading-bar"></div></div>
 </div>
 
@@ -925,7 +950,48 @@
     var firstGift = null;
     var videoCache = {};
 
+    function startLoadingStory() {
+        var storyEl = document.getElementById('loading-story');
+        if (!storyEl) return;
+
+        var lines = [
+            '今天是宝的生日🎂',
+            '可是房间还是空空的...',
+            '快来帮忙布置一下吧！',
+            '每次二选一，最多选10次哦～',
+            '看看最后会得到什么礼物🎁'
+        ];
+
+        var fullText = lines.join('\n');
+        var charIndex = 0;
+        var cursor = document.createElement('span');
+        cursor.className = 'cursor';
+
+        function typeNext() {
+            if (charIndex < fullText.length) {
+                var ch = fullText[charIndex];
+                if (ch === '\n') {
+                    storyEl.insertBefore(document.createElement('br'), cursor);
+                } else {
+                    storyEl.insertBefore(document.createTextNode(ch), cursor);
+                }
+                charIndex++;
+                var delay = ch === '\n' ? 300 : (ch === '～' || ch === '…' ? 150 : 60);
+                setTimeout(typeNext, delay);
+            } else {
+                setTimeout(function() {
+                    if (cursor.parentNode) cursor.remove();
+                }, 2000);
+            }
+        }
+
+        storyEl.appendChild(cursor);
+        setTimeout(typeNext, 500);
+    }
+
     function init() {
+        startLoadingStory();
+
         var container = document.getElementById('room-container');
         var loadingBar = document.getElementById('loading-bar');
         var loadingScreen = document.getElementById('loading-screen');
@@ -1225,7 +1291,7 @@
                 video.style.setProperty('width', '1px', 'important');
                 video.style.setProperty('height', '1px', 'important');
                 video.style.overflow = 'hidden';
-                video.style.opacity = '0';
+                video.style.opacity = '0.01';
                 video.style.pointerEvents = 'none';
                 video.style.zIndex = '-1';
                 deco.appendChild(video);
@@ -1288,6 +1354,20 @@
         }
 
         document.getElementById('room-container').appendChild(deco);
+
+        if (isVideo) {
+            var playV = deco.querySelector('video') || video;
+            function tryPlayV() {
+                playV.play().catch(function() {
+                    setTimeout(tryPlayV, 300);
+                });
+            }
+            if (playV.readyState >= 2) {
+                tryPlayV();
+            } else {
+                playV.addEventListener('loadeddata', tryPlayV, { once: true });
+            }
+        }
     }
 
     function confirmResult() {
