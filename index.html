@@ -15,7 +15,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             transition: opacity 0.5s ease;
         }
 
@@ -24,26 +23,34 @@
             pointer-events: none;
         }
 
+        #loading-screen .loading-header {
+            flex-shrink: 0;
+            padding: 30px 20px 12px;
+            text-align: center;
+        }
+
         #loading-screen .loading-emoji {
             font-size: 3rem;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             animation: bounceIn 1s ease;
         }
 
         #loading-screen .loading-text {
             font-size: 1.1rem;
             color: #8D6E63;
-            margin-bottom: 20px;
         }
 
         #loading-screen .loading-story {
-            max-width: 320px;
-            text-align: center;
-            font-size: 0.95rem;
-            line-height: 1.8;
+            flex: 1;
+            width: 100%;
+            max-width: 400px;
+            padding: 0 24px;
+            text-align: left;
+            font-size: 0.88rem;
+            line-height: 1.9;
             color: #5D4037;
-            margin-bottom: 24px;
-            min-height: 80px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         #loading-screen .loading-story .cursor {
@@ -60,6 +67,16 @@
             50% { opacity: 0; }
         }
 
+        #loading-screen .loading-footer {
+            flex-shrink: 0;
+            padding: 16px 20px 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+        }
+
         #loading-screen .loading-bar-bg {
             width: 200px;
             height: 6px;
@@ -74,6 +91,27 @@
             border-radius: 3px;
             width: 0%;
             transition: width 0.3s ease;
+        }
+
+        #loading-screen .enter-btn {
+            display: none;
+            padding: 14px 44px;
+            background: linear-gradient(135deg, #7CB342, #8BC34A);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.15rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(124, 179, 66, 0.3);
+            font-family: inherit;
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        #loading-screen .enter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 179, 66, 0.4);
         }
 
         body {
@@ -149,6 +187,39 @@
         #intro .start-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(124, 179, 66, 0.4);
+        }
+
+        #loading-screen .loading-text .voice-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1.5px solid #E0D5C7;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            color: #8D6E63;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            vertical-align: middle;
+            margin-left: 6px;
+        }
+
+        #loading-screen .loading-text .voice-btn:hover {
+            border-color: #7CB342;
+            background: #F1F8E9;
+            color: #5D4037;
+        }
+
+        #loading-screen .loading-text .voice-btn.playing {
+            border-color: #7CB342;
+            background: #F1F8E9;
+            color: #7CB342;
+        }
+
+        #loading-screen .loading-text .voice-btn .voice-icon {
+            font-size: 0.95rem;
         }
 
         #room-container {
@@ -773,10 +844,15 @@
 <body>
 
 <div id="loading-screen">
-    <div class="loading-emoji">🎂</div>
-    <div class="loading-text">正在布置房间...</div>
+    <div class="loading-header">
+        <div class="loading-emoji">🎈</div>
+        <div class="loading-text">帮你宝布置他宝房间 <button class="voice-btn" id="voice-btn"><span class="voice-icon">🔊</span></button></div>
+    </div>
     <div class="loading-story" id="loading-story"></div>
-    <div class="loading-bar-bg"><div class="loading-bar" id="loading-bar"></div></div>
+    <div class="loading-footer">
+        <div class="loading-bar-bg"><div class="loading-bar" id="loading-bar"></div></div>
+        <button class="enter-btn" id="enter-btn">进入游戏 ✨</button>
+    </div>
 </div>
 
 <div id="intro">
@@ -834,7 +910,7 @@
             id: 1, name: '阁楼玻璃墙',
             x: 400, y: 80, w: 1900, h: 300,
             options: [
-                { label: '🎵 音乐彩旗', theme: 'music', file: 'id1Amusic.webp', desc: '音符在玻璃上跳跃，生日快乐歌的前奏已经响起。' },
+                { label: '🎵 音乐彩旗', theme: 'music', file: 'id1Amusic.webp', desc: '来一首生日快乐歌吧！！！！' },
                 { label: '🐱 猫猫彩旗', theme: 'cat', file: 'id1Bcat.webp', desc: '每只小猫爪子都在为你鼓掌，喵呜~生日快乐！' }
             ]
         },
@@ -842,39 +918,39 @@
             id: 2, name: '窗户玻璃',
             x: 1400, y: 1450, w: 950, h: 700,
             options: [
-                { label: '🌅 日初贴纸', theme: 'health', file: 'id2Ahealth.jpg', desc: '清晨的第一缕阳光，是健康生活的最好邀请函。' },
-                { label: '🗺️ 世界地图', theme: 'travel', file: 'id2Btravel.webp', desc: '把世界贴在窗前，我们的下一站是哪里呢？' }
+                { label: '🌅 日初贴纸', theme: 'health', file: 'id2Ahealth.jpg', desc: '健康生活好棒～但是贴了日出贴纸你宝也起不来～' },
+                { label: '🗺️ 世界地图', theme: 'travel', file: 'id2Btravel.webp', desc: '把世界贴在窗前，带你宝走遍全世界～～～' }
             ]
         },
         {
             id: 3, name: '窗台',
             x: 1350, y: 2200, w: 1100, h: 300,
             options: [
-                { label: '🌿 绿植', theme: 'health', file: 'id3Ahealth.webp', desc: '一抹小绿意，给房间带来呼吸和活力。' },
-                { label: '🧋 霸王茶姬', theme: 'funny', file: 'id3B.webp', desc: '来一杯狗脚？开在房间好方便呀，不过选了没分哦！' }
+                { label: '🌿 绿植', theme: 'health', file: 'id3Ahealth.webp', desc: '小绿意可以给房间带来呼吸，但是囧囧可能不一定领情😐' },
+                { label: '🧋 霸王茶姬', theme: 'funny', file: 'id3B.webp', desc: '哇 我宝对我最好惹～来一杯狗脚八～～～' }
             ]
         },
         {
             id: 4, name: '沙发',
             x: 1100, y: 2500, w: 1400, h: 900,
             options: [
-                { label: '✈️ 飞机抱枕', theme: 'travel', file: 'id4Atravel.webp', desc: '抱着它，好像已经飞在去见你的云层里了。' },
-                { label: '🍎 苹果抱枕', theme: 'health', file: 'id4bhealth.jpeg', desc: '咬一口健康，把元气抱在怀里。' }
+                { label: '✈️ 飞机抱枕', theme: 'travel', file: 'id4Atravel.webp', desc: '抱着他，好像已经飞走去见我宝的云层里了～' },
+                { label: '🍎 苹果抱枕', theme: 'health', file: 'id4bhealth.jpeg', desc: '苹果抱枕软fu fu' }
             ]
         },
         {
             id: 5, name: '茶几桌上',
             x: 600, y: 3000, w: 700, h: 300,
             options: [
-                { label: '🍎 水果盘', theme: 'health', file: 'id5Ahealth.webp', desc: '五颜六色的甜，是今天最健康的庆祝方式。' },
-                { label: '🐱 猫咪小夜灯', theme: 'cat', file: 'id5Bcat.webp', desc: '夜里亮起一束柔光，像猫咪一样悄悄守护你。' }
+                { label: '🍎 水果盘', theme: 'health', file: 'id5Ahealth.webp', desc: '我宝的宝最爱吃草莓啦！不胖又健康！！' },
+                { label: '🐱 猫咪小夜灯', theme: 'cat', file: 'id5Bcat.webp', desc: '多一只发光小猫咪陪我宝～' }
             ]
         },
         {
             id: 6, name: '黑桌左边',
             x: 2250, y: 2950, w: 600, h: 450,
             options: [
-                { label: '🍎 苹果蛋糕', theme: 'health', file: 'id6Ahealth.webp', desc: '苹果味的甜蜜，生日就要清清甜甜。' },
+                { label: '🍎 苹果蛋糕', theme: 'health', file: 'id6Ahealth.webp', desc: '水果蛋糕应该不胖吧～' },
                 { label: '🌿 香菜蛋糕', theme: 'funny', file: 'id6B.jpeg', desc: '？？？？？我宝喜欢这个吗' }
             ]
         },
@@ -882,32 +958,32 @@
             id: 7, name: '黑桌右边',
             x: 2800, y: 2850, w: 550, h: 450,
             options: [
-                { label: '🔊 音响', theme: 'music', file: 'id7Amusic.webp', desc: '让歌声填满房间，音乐是最好的氛围组。' },
-                { label: '🌍 地球仪', theme: 'travel', file: 'id7Btravel.webp', desc: '转一转地球仪，猜猜下次旅行我们会去哪。' }
+                { label: '🔊 音响', theme: 'music', file: 'id7Amusic.webp', desc: '来一首我们的定情曲吧～' },
+                { label: '🌍 地球仪', theme: 'travel', file: 'id7Btravel.webp', desc: '转一转，我宝和我宝的宝要去哪儿呢～' }
             ]
         },
         {
             id: 8, name: '左边墙面',
             x: 150, y: 1800, w: 550, h: 600,
             options: [
-                { label: '🎧 耳机', theme: 'music', file: 'id8Amusic.jpeg', desc: '耳机一戴，世界安静，只有音乐和你。' },
-                { label: '💨 想你的风标牌', theme: 'travel', file: 'id8Btravel.jpeg', desc: '风会把思念送过千山万水，吹到你的身边。' }
+                { label: '🎧 耳机', theme: 'music', file: 'id8Amusic.jpeg', desc: '耳机放这里会不会被乱挠呀！！' },
+                { label: '💨 想你的风标牌', theme: 'travel', file: 'id8Btravel.jpeg', desc: '哈哈哈哈哈哈哈哈哈这么想你宝吗～' }
             ]
         },
         {
             id: 9, name: '地板左边',
             x: 500, y: 3800, w: 700, h: 600,
             options: [
-                { label: '🧳 行李箱', theme: 'travel', file: 'id9Atravel.mov', desc: '收好行囊，随时准备出发，去想去的地方。' },
-                { label: '🎹 钢琴', theme: 'music', file: 'id9Bmusic.mp4', desc: '黑白键间的旋律，是送给耳朵的浪漫礼物。' }
+                { label: '🧳 行李箱', theme: 'travel', file: 'id9Atravel.mov', desc: '收拾行李箱，准备要去哪呀～' },
+                { label: '🎹 钢琴', theme: 'music', file: 'id9Bmusic.mp4', desc: '这个钢琴是给囧囧买的吗～' }
             ]
         },
         {
             id: 10, name: '地板右边',
             x: 2600, y: 4100, w: 700, h: 600,
             options: [
-                { label: '🐱 猫爬架', theme: 'cat', file: 'id10Acat.jpeg', desc: '给你的毛孩子安排一个快乐小天地吧。' },
-                { label: '🧘 瑜伽垫', theme: 'health', file: 'id10Bhealth.mov', desc: '铺开垫子，给身体一场放松的深呼吸。' }
+                { label: '🐱 猫爬架', theme: 'cat', file: 'id10Acat.jpeg', desc: '他们这么胖，能爬上去吗🤔️' },
+                { label: '🧘 瑜伽垫', theme: 'health', file: 'id10Bhealth.mov', desc: '跟着橘子一起拉拉伸～' }
             ]
         },
         {
@@ -915,7 +991,7 @@
             x: 1600, y: 4000, w: 900, h: 600,
             options: [
                 { label: '🐱 小猫咪', theme: 'cat', file: 'id11Bcat.jpeg', desc: '哎呀，小猫咪大吉留下了一个粑粑走了～' },
-                { label: '🥬 一袋蔬菜', theme: 'health', file: 'id11Ahealth.jpeg', desc: '(｀へ´) 喂，生日为什么要送菜啊？……好吧，健康第一！' }
+                { label: '🥬 一袋蔬菜', theme: 'health', file: 'id11Ahealth.jpeg', desc: '我宝要给我做什么饭饭呀～～～' }
             ]
         }
     ];
@@ -955,11 +1031,27 @@
         if (!storyEl) return;
 
         var lines = [
-            '今天是宝的生日🎂',
-            '可是房间还是空空的...',
-            '快来帮忙布置一下吧！',
-            '每次二选一，最多选10次哦～',
-            '看看最后会得到什么礼物🎁'
+            '✨ 今天是我宝的生日～',
+            '',
+            '难得我宝的房间空空的（平时特别乱），',
+            '在这个特别的日子，你宝懒洋洋的～',
+            '所以需要我宝来帮我宝的宝，布置一下这个房间。',
+            '让我宝拥有一个我宝会喜欢的房间。',
+            '',
+            '⏳ 游戏正在加载中……',
+            '首次加载会有点久啦嘿嘿，我也没办法让它更快😅，',
+            '趁现在先看看布置规则吧～',
+            '',
+            '👉 等会儿进入游戏后，你会看到我宝的房间。',
+            '看看空空的房间里，有哪些地方是可以布置的呢？',
+            '你要按照"我宝的思路"来布置哦～',
+            '什么是"我宝的思路"？就是你觉得我宝会喜欢什么样的东西。',
+            '',
+            '房间一共有 11 个地方可以布置，',
+            '但你只有 10 次机会！',
+            '每次选择都是二选一，选了就不能后悔哦～',
+            '',
+            '★ 看看最后会得到什么惊喜吧！'
         ];
 
         var fullText = lines.join('\n');
@@ -975,8 +1067,9 @@
                 } else {
                     storyEl.insertBefore(document.createTextNode(ch), cursor);
                 }
+                storyEl.scrollTop = storyEl.scrollHeight;
                 charIndex++;
-                var delay = ch === '\n' ? 300 : (ch === '～' || ch === '…' ? 150 : 60);
+                var delay = ch === '\n' ? 200 : 50;
                 setTimeout(typeNext, delay);
             } else {
                 setTimeout(function() {
@@ -999,7 +1092,17 @@
 
         function hideLoading() {
             loadingBar.style.width = '100%';
-            setTimeout(function() { loadingScreen.classList.add('hidden'); }, 300);
+            var enterBtn = document.getElementById('enter-btn');
+            enterBtn.style.display = 'block';
+            enterBtn.addEventListener('click', function() {
+                if (pageVoice && !pageVoice.paused) {
+                    pageVoice.pause();
+                    pageVoice.currentTime = 0;
+                }
+                loadingScreen.classList.add('hidden');
+                document.getElementById('intro').classList.add('hidden');
+                startGame();
+            });
         }
 
         function preloadAssets() {
@@ -1065,12 +1168,35 @@
         });
 
         document.getElementById('start-btn').addEventListener('click', startGame);
+        document.getElementById('voice-btn').addEventListener('click', toggleVoice);
         document.getElementById('option-a').addEventListener('click', function() { selectOption(0); });
         document.getElementById('option-b').addEventListener('click', function() { selectOption(1); });
         document.getElementById('choice-close').addEventListener('click', closeChoice);
         document.getElementById('confirm-btn').addEventListener('click', confirmResult);
         document.getElementById('finish-btn').addEventListener('click', finishGame);
         document.getElementById('replay-btn').addEventListener('click', replayGame);
+    }
+
+    var pageVoice = null;
+
+    function toggleVoice() {
+        var btn = document.getElementById('voice-btn');
+        if (pageVoice && !pageVoice.paused) {
+            pageVoice.pause();
+            pageVoice.currentTime = 0;
+            btn.classList.remove('playing');
+            btn.innerHTML = '<span class="voice-icon">🔊</span> 点击听声音版';
+        } else {
+            if (pageVoice) { pageVoice.pause(); pageVoice.currentTime = 0; }
+            pageVoice = new Audio('pagevoice.m4a?v=1');
+            pageVoice.play().catch(function() {});
+            btn.classList.add('playing');
+            btn.innerHTML = '<span class="voice-icon">🔇</span> 正在播放...';
+            pageVoice.addEventListener('ended', function() {
+                btn.classList.remove('playing');
+                btn.innerHTML = '<span class="voice-icon">🔊</span> 点击听声音版';
+            }, { once: true });
+        }
     }
 
     function startGame() {
@@ -1390,7 +1516,7 @@
 
         if (hotspot.id === 1 && hotspot.options.indexOf(option) === 0) {
             if (bgMusic) { bgMusic.pause(); bgMusic = null; }
-            bgMusic = new Audio('mu00.m4a?v=3');
+            bgMusic = new Audio('mu00.m4a?v=4');
             bgMusic.loop = false;
             bgMusic.play().catch(function() {});
         }
