@@ -1024,7 +1024,6 @@
     var durgFound = false;
     var isSecondPlay = false;
     var firstGift = null;
-    var videoCache = {};
 
     function startLoadingStory() {
         var storyEl = document.getElementById('loading-story');
@@ -1106,6 +1105,10 @@
         }
 
         function preloadAssets() {
+            // pagevoice 优先加载
+            var voiceAudio = new Audio('pagevoice.m4a?v=1');
+            voiceAudio.preload = 'auto';
+
             var allImageFiles = [];
             var allVideoFiles = [];
             hotspots.forEach(function(hs) {
@@ -1118,9 +1121,7 @@
                 });
             });
 
-            var totalFiles = allImageFiles.length + allVideoFiles.length;
-            if (totalFiles === 0) { hideLoading(); return; }
-
+            var totalFiles = allImageFiles.length + allVideoFiles.length + 1; // +1 for voice
             var loaded = 0;
             function onLoaded() {
                 loaded++;
@@ -1129,22 +1130,47 @@
                 if (loaded >= totalFiles) hideLoading();
             }
 
-            allImageFiles.forEach(function(file) {
-                var img = new Image();
-                img.onload = onLoaded;
-                img.onerror = onLoaded;
-                img.src = file;
-            });
+            // 声音最先加载
+            voiceAudio.addEventListener('canplaythrough', onLoaded, { once: true });
+            voiceAudio.addEventListener('error', onLoaded, { once: true });
 
-            allVideoFiles.forEach(function(file) {
-                var video = document.createElement('video');
-                video.preload = 'auto';
-                video.muted = true;
-                video.src = file + '?v=17';
-                video.addEventListener('canplaythrough', onLoaded, { once: true });
-                video.addEventListener('error', onLoaded, { once: true });
-                videoCache[file] = video;
-            });
+            // 声音加载完再加载其他资源
+            voiceAudio.addEventListener('canplaythrough', function() {
+                allImageFiles.forEach(function(file) {
+                    var img = new Image();
+                    img.onload = onLoaded;
+                    img.onerror = onLoaded;
+                    img.src = file;
+                });
+
+                allVideoFiles.forEach(function(file) {
+                    var video = document.createElement('video');
+                    video.preload = 'auto';
+                    video.muted = true;
+                    video.src = file + '?v=17';
+                    video.addEventListener('canplaythrough', onLoaded, { once: true });
+                    video.addEventListener('error', onLoaded, { once: true });
+                });
+            }, { once: true });
+
+            // 声音加载失败也要继续加载其他资源
+            voiceAudio.addEventListener('error', function() {
+                allImageFiles.forEach(function(file) {
+                    var img = new Image();
+                    img.onload = onLoaded;
+                    img.onerror = onLoaded;
+                    img.src = file;
+                });
+
+                allVideoFiles.forEach(function(file) {
+                    var video = document.createElement('video');
+                    video.preload = 'auto';
+                    video.muted = true;
+                    video.src = file + '?v=17';
+                    video.addEventListener('canplaythrough', onLoaded, { once: true });
+                    video.addEventListener('error', onLoaded, { once: true });
+                });
+            }, { once: true });
         }
 
         if (roomImg.complete && roomImg.naturalWidth > 0) {
